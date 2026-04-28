@@ -297,9 +297,9 @@
   </div>
 </div>
 
-<!-- supabase-js + qrcode from CDN -->
+<!-- supabase-js + qrcodejs from CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 
 <script>
 // ---------------------------------------------------------------
@@ -494,11 +494,26 @@ async function renderQr(token) {
   const url = location.origin + location.pathname + "?t=" + encodeURIComponent(token);
   document.getElementById("qr-url").textContent = url;
   const container = document.getElementById("qr-container");
-  container.innerHTML = '<div class="qr-box"><canvas id="qr-canvas"></canvas></div>';
-  await window.QRCode.toCanvas(document.getElementById("qr-canvas"), url, {
-    width: 256, margin: 2, errorCorrectionLevel: "M",
-  });
-  setBadge(4, "ok", "ready to scan");
+  container.innerHTML = '<div class="qr-box"><div id="qr-target"></div></div>';
+  try {
+    if (typeof window.QRCode !== "function") {
+      throw new Error("QRCode library failed to load (CDN issue)");
+    }
+    new window.QRCode(document.getElementById("qr-target"), {
+      text: url,
+      width: 256,
+      height: 256,
+      correctLevel: window.QRCode.CorrectLevel.M,
+    });
+    setBadge(4, "ok", "ready to scan");
+  } catch (err) {
+    console.error("QR render failed", err);
+    document.getElementById("qr-target").innerHTML =
+      '<div style="padding:24px;color:#ef4444;font-size:0.9em;">QR render failed: ' +
+      (err && err.message ? err.message : String(err)) +
+      '<br><br>You can still tap "Open in new tab" below — the URL works regardless.</div>';
+    setBadge(4, "warn", "url-only (QR failed)");
+  }
 }
 
 function renderWidgetSnippet(token) {
