@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>SipTrue — Demo Harness</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #161b22;
+    --panel-2: #1c2230;
+    --line: #30363d;
+    --text: #e6edf3;
+    --muted: #8b98a5;
+    --accent: #2f81f7;
+    --accent-hover: #4493f8;
+    --good: #3fb950;
+    --warn: #d29922;
+    --bad: #f85149;
+    --ring: rgba(47, 129, 247, 0.4);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    line-height: 1.5;
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.6em; margin: 0 0 4px 0; }
+  h2 { font-size: 1.15em; margin: 0; }
+  .sub { color: var(--muted); font-size: 0.95em; margin-bottom: 24px; }
+  .section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-head {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-head .badge {
+    font-size: 0.8em;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: var(--panel-2);
+    color: var(--muted);
+  }
+  .section-head .badge.ok { background: rgba(63, 185, 80, 0.15); color: var(--good); }
+  .section-head .badge.warn { background: rgba(210, 153, 34, 0.15); color: var(--warn); }
+  .section-head .badge.bad { background: rgba(248, 81, 73, 0.15); color: var(--bad); }
+  .section-body { padding: 18px; }
+  .section-body p { margin: 0 0 12px 0; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  label { display: block; font-size: 0.85em; color: var(--muted); margin-bottom: 4px; margin-top: 8px; }
+  input[type=text], input[type=email], input[type=tel], input[type=url], input[type=number], select, textarea {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 0.95em;
+    font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+  textarea { min-height: 80px; resize: vertical; }
+  button {
+    background: var(--accent);
+    color: white;
+    border: 0;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 500;
+    margin-top: 12px;
+  }
+  button:hover { background: var(--accent-hover); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  button.ghost:hover { background: var(--panel-2); }
+  pre {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 0.82em;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+  code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+  .small { font-size: 0.85em; color: var(--muted); }
+  .stars { display: inline-flex; gap: 4px; font-size: 1.6em; user-select: none; }
+  .star { cursor: pointer; color: #555; }
+  .star.lit { color: #f0b400; }
+  .review-card {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  .review-card .stars { font-size: 1.1em; }
+  .qr-box {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-top: 12px;
+  }
+  .qr-box img, .qr-box canvas { display: block; }
+  .url-box {
+    word-break: break-all;
+    background: var(--panel-2);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.82em;
+    margin: 8px 0;
+  }
+  .hidden { display: none !important; }
+  .alert { padding: 10px 14px; border-radius: 6px; margin: 8px 0; font-size: 0.9em; }
+  .alert.error { background: rgba(248, 81, 73, 0.1); color: var(--bad); border: 1px solid rgba(248, 81, 73, 0.3); }
+  .alert.success { background: rgba(63, 185, 80, 0.1); color: var(--good); border: 1px solid rgba(63, 185, 80, 0.3); }
+  .alert.info { background: rgba(47, 129, 247, 0.1); color: var(--accent); border: 1px solid rgba(47, 129, 247, 0.3); }
+  iframe.widget { width: 100%; min-height: 400px; border: 1px solid var(--line); border-radius: 6px; background: white; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- TENANT VIEW (default — when no ?t= param)                    -->
+<!-- ============================================================ -->
+<div id="tenant-view" class="hidden">
+  <h1>SipTrue — Demo Harness</h1>
+  <div class="sub">
+    Backend running in demo mode (BILLING_REQUIRED=false, EMAIL_REQUIRED=false, TURNSTILE_REQUIRED=false).
+    Step through to validate the full flow.
+  </div>
+
+  <!-- Section 1: Sign in -->
+  <div class="section" id="sec-1">
+    <div class="section-head"><h2>1. Sign in (Supabase Auth)</h2><span class="badge" id="badge-1">pending</span></div>
+    <div class="section-body" id="body-1">
+      <p>Sign in via Supabase Auth magic-link. The magic-link email will use Supabase's built-in test SMTP. You may have to add your email to the project's <a target="_blank" href="" id="auth-url-link">Auth → Users</a> list manually if free-tier SMTP rate-limits you.</p>
+      <label>Email</label>
+      <input type="email" id="signin-email" placeholder="dave@numberdrinks.com" />
+      <button id="signin-btn">Send magic link</button>
+      <div id="signin-status"></div>
+      <p class="small">Already signed in? Refresh and the session loads from localStorage.</p>
+    </div>
+  </div>
+
+  <!-- Section 2: Provision tenant -->
+  <div class="section" id="sec-2">
+    <div class="section-head"><h2>2. Provision tenant</h2><span class="badge" id="badge-2">pending</span></div>
+    <div class="section-body" id="body-2">
+      <p>Calls <code>POST /tenants/provision</code>. In demo mode the response includes a null <code>checkout_url</code> and the tenant is seeded directly with <code>subscription_state='trialing'</code>.</p>
+      <label>Brand name</label>
+      <input type="text" id="prov-brand" value="Number Drinks" />
+      <label>Category</label>
+      <select id="prov-category">
+        <option value="soda">soda</option>
+        <option value="cbd">cbd</option>
+        <option value="cannabis">cannabis</option>
+        <option value="beer">beer</option>
+        <option value="wine">wine</option>
+        <option value="spirits">spirits</option>
+        <option value="other">other</option>
+      </select>
+      <button id="provision-btn">Provision</button>
+      <div id="prov-status"></div>
+    </div>
+  </div>
+
+  <!-- Section 3: Create SKU -->
+  <div class="section" id="sec-3">
+    <div class="section-head"><h2>3. Create a SKU</h2><span class="badge" id="badge-3">pending</span></div>
+    <div class="section-body" id="body-3">
+      <p>Inserts a <code>skus</code> row via supabase-js (RLS allows since the tenant is in <code>trialing</code>). Generates a 12-char base62 <code>qr_token</code> client-side. The DB trigger populates <code>category</code> from the tenant.</p>
+      <div class="grid-2">
+        <div>
+          <label>SKU name</label>
+          <input type="text" id="sku-name" value="Grapefruit Soda" />
+        </div>
+        <div>
+          <label>Redirect URL (optional)</label>
+          <input type="url" id="sku-redirect" placeholder="https://numberdrinks.com/grapefruit" />
+        </div>
+      </div>
+      <label>Logo (optional, PNG/JPG ≤ 500KB)</label>
+      <input type="file" id="sku-logo" accept="image/*" />
+      <button id="create-sku-btn">Create SKU</button>
+      <div id="sku-status"></div>
+    </div>
+  </div>
+
+  <!-- Section 4: QR + scan -->
+  <div class="section" id="sec-4">
+    <div class="section-head"><h2>4. Generate QR + scan target</h2><span class="badge" id="badge-4">pending</span></div>
+    <div class="section-body" id="body-4">
+      <p>Renders a QR code pointing at the consumer view URL. Open the URL in a phone (or scan the QR with a camera) to test the consumer flow.</p>
+      <div id="qr-container"></div>
+      <div class="url-box" id="qr-url"></div>
+      <button class="ghost" id="copy-url-btn">Copy URL</button>
+      <button class="ghost" id="open-url-btn">Open in new tab</button>
+    </div>
+  </div>
+
+  <!-- Section 6: Widget (no Section 5 in tenant view — that's consumer view) -->
+  <div class="section" id="sec-6">
+    <div class="section-head"><h2>5. Widget (live reviews)</h2><span class="badge" id="badge-6">pending</span></div>
+    <div class="section-body" id="body-6">
+      <p>Embed code (paste this into any external page to render this SKU's reviews):</p>
+      <pre id="widget-snippet"></pre>
+      <p>Live preview:</p>
+      <iframe class="widget" id="widget-iframe"></iframe>
+      <button class="ghost" id="refresh-widget-btn">Refresh widget</button>
+    </div>
+  </div>
+
+  <!-- Reset -->
+  <div class="section">
+    <div class="section-head"><h2>Reset / advanced</h2></div>
+    <div class="section-body">
+      <p class="small">Sign out of Supabase + clear local SKU state. Useful to re-test from scratch.</p>
+      <button class="ghost" id="reset-btn">Reset all</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- CONSUMER VIEW (when ?t=<token> in URL)                       -->
+<!-- ============================================================ -->
+<div id="consumer-view" class="hidden">
+  <h1 style="text-align:center;">Leave a review</h1>
+  <div class="section">
+    <div class="section-body" id="consumer-body">
+      <div id="consumer-loading" class="alert info">Loading product info…</div>
+      <div id="consumer-form" class="hidden">
+        <div style="text-align:center; margin-bottom:16px;">
+          <img id="consumer-logo" alt="" style="max-height:80px; max-width:200px;" />
+          <h2 id="consumer-brand" style="margin-top:8px;"></h2>
+        </div>
+        <label>Stars</label>
+        <div class="stars" id="consumer-stars">
+          <span class="star" data-v="1">★</span><span class="star" data-v="2">★</span>
+          <span class="star" data-v="3">★</span><span class="star" data-v="4">★</span>
+          <span class="star" data-v="5">★</span>
+        </div>
+        <label>Your review (max 300 chars)</label>
+        <textarea id="consumer-text" maxlength="300"></textarea>
+        <div class="grid-2">
+          <div>
+            <label>Email <span style="color:var(--bad);">*</span></label>
+            <input type="email" id="consumer-email" required />
+          </div>
+          <div>
+            <label>Phone (optional)</label>
+            <input type="tel" id="consumer-phone" />
+          </div>
+        </div>
+        <div id="age-row" class="hidden">
+          <label><input type="checkbox" id="consumer-age" /> I am of legal drinking age in my jurisdiction.</label>
+        </div>
+        <label><input type="checkbox" id="consumer-brand-optin" /> Receive occasional updates from this brand</label>
+        <label><input type="checkbox" id="consumer-siptrue-optin" /> Receive SipTrue communications</label>
+        <input type="text" id="consumer-website" style="display:none" tabindex="-1" autocomplete="off" />
+        <button id="consumer-submit">Submit review</button>
+        <div id="consumer-status"></div>
+      </div>
+      <div id="consumer-thanks" class="hidden">
+        <div class="alert success">
+          <strong>Thanks!</strong> Your review has been published.
+        </div>
+        <p id="consumer-redirect-msg" class="small"></p>
+      </div>
+    </div>
+  </div>
+  <div class="small" style="text-align:center; margin-top:12px;">
+    <a href="?" style="color:var(--muted);">[Demo: switch to tenant view]</a>
+  </div>
+</div>
+
+<!-- supabase-js + qrcode from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+
+<script>
+// ---------------------------------------------------------------
+// Config — these are public values; safe to embed in client.
+// ---------------------------------------------------------------
+const SUPABASE_URL = "https://uiwjnhljwzncmfnzthep.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpd2puaGxqd3puY21mbnp0aGVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjUzNzYsImV4cCI6MjA5MjcwMTM3Nn0.H2j39HUKUt8y1Jo4nJHIRXSn2HDl7Mkua9YgYGfNeRs";
+const FUNCTIONS_URL = SUPABASE_URL + "/functions/v1";
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+});
+
+// ---------------------------------------------------------------
+// View routing — ?t= present => consumer view.
+// ---------------------------------------------------------------
+const params = new URLSearchParams(location.search);
+const consumerToken = params.get("t");
+
+if (consumerToken) {
+  document.getElementById("consumer-view").classList.remove("hidden");
+  initConsumerView(consumerToken);
+} else {
+  document.getElementById("tenant-view").classList.remove("hidden");
+  initTenantView();
+}
+
+// =================================================================
+// TENANT VIEW
+// =================================================================
+async function initTenantView() {
+  document.getElementById("auth-url-link").href =
+    "https://supabase.com/dashboard/project/uiwjnhljwzncmfnzthep/auth/users";
+
+  // Resume session if user already signed in.
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    setBadge(1, "ok", "signed in: " + session.user.email);
+    document.getElementById("body-1").innerHTML +=
+      `<div class="alert success">Already signed in as ${session.user.email}. <button class="ghost" id="signout-btn">Sign out</button></div>`;
+    document.getElementById("signout-btn").onclick = async () => {
+      await sb.auth.signOut();
+      location.reload();
+    };
+    await loadTenantState(session);
+  } else {
+    setBadge(1, "warn", "not signed in");
+  }
+
+  document.getElementById("signin-btn").onclick = doSignin;
+  document.getElementById("provision-btn").onclick = doProvision;
+  document.getElementById("create-sku-btn").onclick = doCreateSku;
+  document.getElementById("copy-url-btn").onclick = () => {
+    navigator.clipboard.writeText(document.getElementById("qr-url").textContent);
+    flash("URL copied");
+  };
+  document.getElementById("open-url-btn").onclick = () => {
+    window.open(document.getElementById("qr-url").textContent, "_blank");
+  };
+  document.getElementById("refresh-widget-btn").onclick = loadWidget;
+  document.getElementById("reset-btn").onclick = async () => {
+    await sb.auth.signOut();
+    localStorage.clear();
+    location.reload();
+  };
+
+  sb.auth.onAuthStateChange((evt, session) => {
+    if (evt === "SIGNED_IN" && session) {
+      location.reload();
+    }
+  });
+}
+
+async function loadTenantState(session) {
+  // Load tenant if exists.
+  const { data: tenant } = await sb
+    .from("tenants")
+    .select("id, brand_name, category, subscription_state")
+    .eq("owner_auth_id", session.user.id)
+    .maybeSingle();
+
+  if (tenant) {
+    setBadge(2, "ok", tenant.subscription_state);
+    document.getElementById("prov-status").innerHTML =
+      `<div class="alert success">Tenant <code>${tenant.id}</code> &mdash; ${tenant.brand_name} &mdash; ${tenant.subscription_state}</div>`;
+    document.getElementById("prov-brand").value = tenant.brand_name;
+    document.getElementById("prov-category").value = tenant.category;
+
+    // Load most-recent SKU.
+    const { data: skus } = await sb
+      .from("skus")
+      .select("id, name, qr_token, status, redirect_url, logo_path")
+      .eq("tenant_id", tenant.id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (skus && skus.length) {
+      const sku = skus[0];
+      setBadge(3, "ok", sku.qr_token);
+      document.getElementById("sku-status").innerHTML =
+        `<div class="alert success">SKU <code>${sku.id}</code> created — token <code>${sku.qr_token}</code></div>`;
+      document.getElementById("sku-name").value = sku.name;
+      if (sku.redirect_url) document.getElementById("sku-redirect").value = sku.redirect_url;
+      await renderQr(sku.qr_token);
+      renderWidgetSnippet(sku.qr_token);
+      await loadWidget();
+    } else {
+      setBadge(3, "warn", "no SKU yet");
+    }
+  } else {
+    setBadge(2, "warn", "no tenant yet");
+  }
+}
+
+async function doSignin() {
+  const email = document.getElementById("signin-email").value.trim();
+  if (!email) { return flash("Enter an email", "error", "signin-status"); }
+  setBtn("signin-btn", true);
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: location.href.split("?")[0] },
+  });
+  setBtn("signin-btn", false);
+  if (error) return flash("Auth error: " + error.message, "error", "signin-status");
+  flash("Magic link sent to " + email + ". Check your inbox.", "success", "signin-status");
+}
+
+async function doProvision() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return flash("Not signed in", "error", "prov-status");
+  const brand = document.getElementById("prov-brand").value.trim();
+  const cat = document.getElementById("prov-category").value;
+  setBtn("provision-btn", true);
+  const r = await fetch(FUNCTIONS_URL + "/tenants-provision", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + session.access_token, "Content-Type": "application/json" },
+    body: JSON.stringify({ brand_name: brand, category: cat, price_id: "demo_ignored" }),
+  });
+  setBtn("provision-btn", false);
+  if (!r.ok) {
+    const err = await r.text();
+    return flash("Provision failed (" + r.status + "): " + err, "error", "prov-status");
+  }
+  const body = await r.json();
+  flash("Provisioned tenant " + body.tenant_id + (body.checkout_url ? "" : " (demo mode — no Stripe)"), "success", "prov-status");
+  await loadTenantState(session);
+}
+
+async function doCreateSku() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return flash("Not signed in", "error", "sku-status");
+
+  const { data: tenant } = await sb
+    .from("tenants").select("id").eq("owner_auth_id", session.user.id).maybeSingle();
+  if (!tenant) return flash("Provision a tenant first", "error", "sku-status");
+
+  const name = document.getElementById("sku-name").value.trim();
+  const redirect = document.getElementById("sku-redirect").value.trim() || null;
+  const logoFile = document.getElementById("sku-logo").files[0];
+  if (!name) return flash("SKU name required", "error", "sku-status");
+  setBtn("create-sku-btn", true);
+
+  // Upload logo to logos/<tenant_id>/<filename>
+  let logoPath = null;
+  if (logoFile) {
+    const ext = logoFile.name.split(".").pop().toLowerCase();
+    logoPath = `${tenant.id}/${randomId(8)}.${ext}`;
+    const { error: upErr } = await sb.storage.from("logos").upload(logoPath, logoFile);
+    if (upErr) {
+      setBtn("create-sku-btn", false);
+      return flash("Logo upload failed: " + upErr.message, "error", "sku-status");
+    }
+  }
+
+  const qrToken = randomToken12();
+  const { data: sku, error } = await sb
+    .from("skus")
+    .insert({ tenant_id: tenant.id, name, logo_path: logoPath, redirect_url: redirect, qr_token: qrToken })
+    .select("id, qr_token")
+    .single();
+  setBtn("create-sku-btn", false);
+  if (error) return flash("INSERT skus failed: " + error.message, "error", "sku-status");
+
+  flash("SKU created — token " + sku.qr_token, "success", "sku-status");
+  setBadge(3, "ok", sku.qr_token);
+  await renderQr(sku.qr_token);
+  renderWidgetSnippet(sku.qr_token);
+  await loadWidget();
+}
+
+async function renderQr(token) {
+  const url = location.origin + location.pathname + "?t=" + encodeURIComponent(token);
+  document.getElementById("qr-url").textContent = url;
+  const container = document.getElementById("qr-container");
+  container.innerHTML = '<div class="qr-box"><canvas id="qr-canvas"></canvas></div>';
+  await window.QRCode.toCanvas(document.getElementById("qr-canvas"), url, {
+    width: 256, margin: 2, errorCorrectionLevel: "M",
+  });
+  setBadge(4, "ok", "ready to scan");
+}
+
+function renderWidgetSnippet(token) {
+  const snippet = `<script src="${FUNCTIONS_URL}/widget-js" data-sku-token="${token}"><\/script>`;
+  document.getElementById("widget-snippet").textContent = snippet;
+}
+
+async function loadWidget() {
+  const token = await currentSkuToken();
+  if (!token) return;
+  const iframe = document.getElementById("widget-iframe");
+  iframe.src = `${FUNCTIONS_URL}/widget/${encodeURIComponent(token)}?h=400`;
+  setBadge(6, "ok", "live");
+}
+
+async function currentSkuToken() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return null;
+  const { data: tenant } = await sb
+    .from("tenants").select("id").eq("owner_auth_id", session.user.id).maybeSingle();
+  if (!tenant) return null;
+  const { data: skus } = await sb
+    .from("skus").select("qr_token")
+    .eq("tenant_id", tenant.id).order("created_at", { ascending: false }).limit(1);
+  return skus?.[0]?.qr_token ?? null;
+}
+
+// =================================================================
+// CONSUMER VIEW
+// =================================================================
+let consumerStars = 0;
+async function initConsumerView(token) {
+  // Wire the star selector.
+  document.querySelectorAll("#consumer-stars .star").forEach((el) => {
+    el.addEventListener("click", () => {
+      consumerStars = Number(el.dataset.v);
+      document.querySelectorAll("#consumer-stars .star").forEach((s) => {
+        s.classList.toggle("lit", Number(s.dataset.v) <= consumerStars);
+      });
+    });
+  });
+
+  // Fetch branding.
+  const r = await fetch(FUNCTIONS_URL + "/branding/" + encodeURIComponent(token));
+  const loading = document.getElementById("consumer-loading");
+  if (!r.ok) {
+    if (r.status === 404) loading.outerHTML = '<div class="alert error">This product link is no longer valid.</div>';
+    else if (r.status === 410) loading.outerHTML = '<div class="alert error">This campaign has ended.</div>';
+    else if (r.status === 402) loading.outerHTML = '<div class="alert error">This brand is currently inactive.</div>';
+    else loading.outerHTML = '<div class="alert error">Could not load (' + r.status + ').</div>';
+    return;
+  }
+  const branding = await r.json();
+  loading.classList.add("hidden");
+  document.getElementById("consumer-form").classList.remove("hidden");
+  document.getElementById("consumer-brand").textContent = branding.brand_name;
+  if (branding.logo_url) document.getElementById("consumer-logo").src = branding.logo_url;
+  if (branding.age_gated) document.getElementById("age-row").classList.remove("hidden");
+
+  document.getElementById("consumer-submit").onclick = () => doConsumerSubmit(token, branding);
+}
+
+async function doConsumerSubmit(token, branding) {
+  const status = document.getElementById("consumer-status");
+  status.innerHTML = "";
+  const text = document.getElementById("consumer-text").value.trim();
+  const email = document.getElementById("consumer-email").value.trim().toLowerCase();
+  const phone = document.getElementById("consumer-phone").value.trim() || null;
+  const ageOk = !branding.age_gated || document.getElementById("consumer-age").checked;
+  const brandOptin = document.getElementById("consumer-brand-optin").checked;
+  const siptrueOptin = document.getElementById("consumer-siptrue-optin").checked;
+  const website = document.getElementById("consumer-website").value;
+
+  if (consumerStars < 1 || consumerStars > 5) return flashElem(status, "Pick a star rating", "error");
+  if (text.length > 300) return flashElem(status, "Review must be ≤ 300 chars", "error");
+  if (!email) return flashElem(status, "Email required", "error");
+  if (!ageOk) return flashElem(status, "Age confirmation required for this product", "error");
+
+  const r = await fetch(FUNCTIONS_URL + "/reviews", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sku_token: token,
+      stars: consumerStars,
+      text,
+      email_normalized: email,
+      phone_e164: phone,
+      age_certified: ageOk,
+      brand_optin: brandOptin,
+      siptrue_optin: siptrueOptin,
+      turnstile_token: "demo-mode-skipped",
+      website,
+    }),
+  });
+  if (r.status === 409) return flashElem(status, "You've already submitted a review for this product.", "error");
+  if (!r.ok) {
+    const body = await r.text();
+    return flashElem(status, "Submission failed (" + r.status + "): " + body, "error");
+  }
+  document.getElementById("consumer-form").classList.add("hidden");
+  const thanks = document.getElementById("consumer-thanks");
+  thanks.classList.remove("hidden");
+
+  // Optional: redirect after 4s if branding has a redirect_url
+  // (the demo doesn't fetch redirect_url from /branding; skip)
+}
+
+// =================================================================
+// HELPERS
+// =================================================================
+function setBadge(n, cls, txt) {
+  const el = document.getElementById("badge-" + n);
+  el.className = "badge " + cls;
+  el.textContent = txt;
+}
+function setBtn(id, busy) {
+  const b = document.getElementById(id);
+  b.disabled = busy;
+  if (busy) { b.dataset.label = b.textContent; b.textContent = "…"; }
+  else if (b.dataset.label) { b.textContent = b.dataset.label; }
+}
+function flash(text, kind, targetId) {
+  const cls = kind === "error" ? "error" : kind === "success" ? "success" : "info";
+  const html = '<div class="alert ' + cls + '">' + text + '</div>';
+  if (targetId) {
+    document.getElementById(targetId).innerHTML = html;
+  } else {
+    alert(text);
+  }
+}
+function flashElem(el, text, kind) {
+  const cls = kind === "error" ? "error" : kind === "success" ? "success" : "info";
+  el.innerHTML = '<div class="alert ' + cls + '">' + text + '</div>';
+}
+function randomToken12() {
+  // 12-char base62.
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const arr = new Uint8Array(12);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, b => alphabet[b % 62]).join("");
+}
+function randomId(n) {
+  const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+  const arr = new Uint8Array(n);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, b => alphabet[b % 36]).join("");
+}
+</script>
+</body>
+</html>
