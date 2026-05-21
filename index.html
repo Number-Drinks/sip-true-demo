@@ -525,7 +525,17 @@ async function loadWidget() {
   const token = await currentSkuToken();
   if (!token) return;
   const iframe = document.getElementById("widget-iframe");
-  iframe.src = `${FUNCTIONS_URL}/widget/${encodeURIComponent(token)}?h=400`;
+  // Supabase serves *.supabase.co HTML as Content-Type:text/plain + CSP:sandbox
+  // as anti-phishing on the shared domain, so iframe.src renders the response
+  // as source text. Fetch + srcdoc makes the iframe doc same-origin with the
+  // harness page, sidestepping the rewrite. Production embedding via widget-js
+  // still requires the widget.siptrue.com custom domain.
+  const res = await fetch(`${FUNCTIONS_URL}/widget/${encodeURIComponent(token)}?h=400`);
+  if (!res.ok) {
+    setBadge(6, "warn", `widget ${res.status}`);
+    return;
+  }
+  iframe.srcdoc = await res.text();
   setBadge(6, "ok", "live");
 }
 
