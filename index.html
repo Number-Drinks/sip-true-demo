@@ -530,7 +530,10 @@ async function loadWidget() {
   // as source text. Fetch + srcdoc makes the iframe doc same-origin with the
   // harness page, sidestepping the rewrite. Production embedding via widget-js
   // still requires the widget.siptrue.com custom domain.
-  const res = await fetch(`${FUNCTIONS_URL}/widget/${encodeURIComponent(token)}?h=400`);
+  // Widget EF sets Cache-Control: max-age=60. Bust it so a refresh after a
+  // freshly-submitted review actually shows that review.
+  const url = `${FUNCTIONS_URL}/widget/${encodeURIComponent(token)}?h=400&_=${Date.now()}`;
+  const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     setBadge(6, "warn", `widget ${res.status}`);
     return;
