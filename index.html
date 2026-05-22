@@ -255,7 +255,8 @@
       <div id="consumer-form" class="hidden">
         <div style="text-align:center; margin-bottom:16px;">
           <img id="consumer-logo" alt="" style="max-height:80px; max-width:200px;" />
-          <h2 id="consumer-brand" style="margin-top:8px;"></h2>
+          <h2 id="consumer-sku" style="margin:8px 0 2px;"></h2>
+          <div id="consumer-brand" style="font-size:0.9em;color:var(--muted);"></div>
         </div>
         <label>Stars</label>
         <div class="stars" id="consumer-stars">
@@ -582,7 +583,9 @@ async function initConsumerView(token) {
   const branding = await r.json();
   loading.classList.add("hidden");
   document.getElementById("consumer-form").classList.remove("hidden");
-  document.getElementById("consumer-brand").textContent = branding.brand_name;
+  document.getElementById("consumer-sku").textContent = branding.sku_name || branding.brand_name;
+  document.getElementById("consumer-brand").textContent =
+    branding.sku_name ? "by " + branding.brand_name : "";
   if (branding.logo_url) document.getElementById("consumer-logo").src = branding.logo_url;
   if (branding.age_gated) document.getElementById("age-row").classList.remove("hidden");
 
